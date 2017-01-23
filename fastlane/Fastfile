@@ -44,12 +44,6 @@ platform :ios do
 
   desc "Provisions the profiles; bumps the build number; builds the app"
   lane :build do
-    # Set up code signing correctly
-    # (more information: https://codesigning.guide)
-    match(readonly: true)
-
-    go_rogue
-
     increment_build_number(
       build_number: get_version(platform: 'iOS'),
       xcodeproj: "./ios/AllAboutOlaf.xcodeproj",
@@ -61,10 +55,19 @@ platform :ios do
 
   desc "Submit a new Beta Build to HockeyApp"
   lane :beta do
+    # Add hockeysdk to beta app
     hockeysdk
 
+    # Set up code signing correctly
+    match(readonly: true)
+
+    # Use the rogue profile
+    go_rogue
+
+    # Build the app
     build
 
+    # Publish a beta
     hockey(
       api_token: ENV["HOCKEYAPP_TOKEN"],
       ipa: "./ios/build/AllAboutOlaf.ipa",
