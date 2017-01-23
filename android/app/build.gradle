@@ -124,8 +124,8 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
         rogue {
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // the 'initWith' property allows you to copy configurations from other build types
+            initWith release
             signingConfig signingConfigs.rogue
         }
     }
