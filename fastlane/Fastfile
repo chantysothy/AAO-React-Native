@@ -123,6 +123,9 @@ platform :ios do
 
   desc "Run iOS builds or tests, as appropriate"
   lane :ci_run do
+    # first off, prepare the keychains
+    ci_keychains
+
     # I'd like to test, instead of just building, but… Xcode's tests keep
     # failing on us. So, we just build, if we're not deploying.
     should_deploy = ENV["run_deploy"] == "yes"
