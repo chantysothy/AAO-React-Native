@@ -223,7 +223,9 @@ platform :android do
 
     gradle_file = "gradle.properties"
     keystore_name = "rogue-release-key.keystore"
+    UI.message "cp #{dir}/android/#{gradle_file} #{ENV["HOME"]}/.gradle/#{gradle_file}"
     FileUtils.cp("#{dir}/android/#{gradle_file}", "#{ENV["HOME"]}/.gradle/#{gradle_file}")
+    UI.message "#{dir}/android/#{keystore_name} ./android/app/#{keystore_name}"
     FileUtils.cp("#{dir}/android/#{keystore_name}", "./android/app/#{keystore_name}")
   end
 
