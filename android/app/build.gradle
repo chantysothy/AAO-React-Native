@@ -82,9 +82,7 @@ apply from: "../../node_modules/react-native/react.gradle"
  */
 def enableSeparateBuildPerCPUArchitecture = false
 
-/**
- * Run Proguard to shrink the Java bytecode in release builds.
- */
+// Run Proguard to shrink the Java bytecode in release builds.
 def enableProguardInReleaseBuilds = false
 
 android {
@@ -104,6 +102,14 @@ android {
                         onesignal_app_id: "aa46a500-ab1c-4127-b9ff-e7373da3ce35",
                         onesignal_google_project_number: "185558680648"]
     }
+    signingConfigs {
+        rogue {
+            storeFile file(APP_RELEASE_STORE_FILE)
+            storePassword APP_RELEASE_STORE_PASSWORD
+            keyAlias APP_RELEASE_KEY_ALIAS
+            keyPassword APP_RELEASE_KEY_PASSWORD
+        }
+    }
     splits {
         abi {
             reset()
@@ -116,6 +122,11 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+        rogue {
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            signingConfig signingConfigs.rogue
         }
     }
     // applicationVariants are e.g. debug, release
