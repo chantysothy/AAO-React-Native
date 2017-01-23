@@ -189,7 +189,8 @@ platform :android do
 
   desc "Run the appropriate action on CI"
   lane :ci_run do
-    should_deploy = ENV["run_deploy"] == "yes"
+    # should_deploy = ENV["run_deploy"] == "yes"
+    should_deploy = true
     unless should_deploy
       build
     else
