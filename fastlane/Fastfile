@@ -233,7 +233,7 @@ platform :android do
 
     gradle(
       task: "assemble",
-      build_type: options[:build_type] || "Release",
+      build_type: options[:build_type],
       project_dir: "./android",
       print_command: true,
       print_command_output: true,
