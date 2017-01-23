@@ -156,18 +156,7 @@ end
 platform :android do
   desc "Makes a build"
   lane :build do
-    set_version_code(
-      version_code: get_version(platform: "Android"),
-      gradle_path: "./android/app/build.gradle",
-    )
-
-    gradle(
-      task: "assemble",
-      build_type: "Release",
-      project_dir: "./android",
-      print_command: true,
-      print_command_output: true,
-    )
+    run_gradle(build_type: "Release")
   end
 
   desc "Submit a new Beta Build to HockeyApp"
@@ -202,6 +191,21 @@ platform :android do
     else
       auto_beta
     end
+  end
+
+  private_lane :run_gradle do |options|
+    set_version_code(
+      version_code: get_version(platform: "Android"),
+      gradle_path: "./android/app/build.gradle",
+    )
+
+    gradle(
+      task: "assemble",
+      build_type: options[:build_type] || "Release",
+      project_dir: "./android",
+      print_command: true,
+      print_command_output: true,
+    )
   end
 end
 
