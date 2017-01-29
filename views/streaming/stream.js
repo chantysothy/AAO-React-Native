@@ -49,7 +49,6 @@ export default class StreamView extends React.Component {
         loaded: true,
         refreshing: false,
         error: null,
-        noStreams: false,
       })
     } catch (error) {
       this.setState({error: error.message})
