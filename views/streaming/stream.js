@@ -5,22 +5,14 @@
  */
 
 import React from 'react'
-import {
-  StyleSheet,
-  Text,
-  RefreshControl,
-  View,
-  ListView,
-} from 'react-native'
+import {View, Platform, ScrollView} from 'react-native'
 
 import LoadingView from '../components/loading'
 import {NoticeView} from '../components/notice'
 import {ListRow, ListSeparator, Detail, Title} from '../components/list'
 import {Column} from '../components/layout'
-import EventView from '../calendar/event'
-import { getTrimmedTextWithSpaces, parseHtml } from '../../lib/html'
+import {getTrimmedTextWithSpaces, parseHtml} from '../../lib/html'
 import {parseXml} from '../news/parse-feed'
-import * as c from '../components/colors'
 
 let base = 'https://www.stolaf.edu/multimedia/streams/rss/'
 let streams = 'rss.cfm?'
@@ -29,26 +21,13 @@ let athleticsStream = base + streams + 'category=athletics'
 let academicStream = base + streams + 'category=academic'
 let concertsStream = base + streams + 'category=concerts'
 
-type GoogleCalendarTimeType = {
-  dateTime: string,
-}
-type GoogleCalendarEventType = {
-  summary: string,
-  start: GoogleCalendarTimeType,
-  end: GoogleCalendarTimeType,
-  location: string,
-};
-
 export default class StreamView extends React.Component {
   state = {
-    streams: new ListView.DataSource({
-      rowHasChanged: (r1: GoogleCalendarEventType, r2: GoogleCalendarEventType) => r1.summary !== r2.summary,
-      sectionHeaderHasChanged: (h1: number, h2: number) => h1 !== h2,
-    }),
     loaded: false,
     refreshing: true,
     error: null,
     noStreams: false,
+    streams: [],
   }
 
   componentWillMount() {
@@ -66,7 +45,7 @@ export default class StreamView extends React.Component {
       }
 
       this.setState({
-        streams: this.state.streams.cloneWithRows(result),
+        streams: result,
         loaded: true,
         refreshing: false,
         error: null,
@@ -76,34 +55,6 @@ export default class StreamView extends React.Component {
       this.setState({error: error.message})
       console.warn(error)
     }
-  }
-
-  renderRow = (data: Object) => {
-    let title = getTrimmedTextWithSpaces(parseHtml(data.title))
-    let description = getTrimmedTextWithSpaces(parseHtml(data.description))
-    return (
-      <View>
-        <ListRow
-          onPress={() => this.onPressEvent(data)}
-          arrowPosition='top'
-        >
-          <Column>
-            <Title lines={1}>{title}</Title>
-            <Detail lines={2}>{description}</Detail>
-          </Column>
-        </ListRow>
-        <ListSeparator spacing={{left: 15}} />
-      </View>
-
-      // <EventView
-      //   style={styles.row}
-      //   eventTitle={data.summary}
-      //   startTime={data.startTime}
-      //   endTime={data.endTime}
-      //   location={data.location}
-      //   isOngoing={data.isOngoing}
-      // />
-    )
   }
 
   render() {
@@ -120,49 +71,22 @@ export default class StreamView extends React.Component {
     }
 
     return (
-      <ListView
-        style={styles.listContainer}
-        dataSource={this.state.streams}
-        renderRow={this.renderRow}
-        pageSize={5}
-        refreshControl={
-          <RefreshControl
-            refreshing={this.state.refreshing}
-            onRefresh={this.refresh}
-          />
-        }
-      />
+      <ScrollView contentInset={{bottom: Platform.OS === 'ios' ? 49 : 0}} >
+        {this.state.streams.map((stream, i) =>
+          <View key={`${i}`}>
+          <ListRow
+            //onPress={() => this.onPressEvent(stream)}
+            arrowPosition='top'
+          >
+            <Column>
+              <Title lines={1}>{getTrimmedTextWithSpaces(parseHtml(stream.title))}</Title>
+              <Detail lines={2}>{getTrimmedTextWithSpaces(parseHtml(stream.description))}</Detail>
+            </Column>
+          </ListRow>
+          <ListSeparator spacing={{left: 15}} />
+        </View>
+        )}
+      </ScrollView>
     )
   }
 }
-
-let styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  listContainer: {
-    backgroundColor: '#ffffff',
-  },
-  row: {
-    paddingRight: 10,
-  },
-  separator: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ebebeb',
-  },
-  rowSectionHeader: {
-    backgroundColor: c.iosListSectionHeader,
-    paddingTop: 5,
-    paddingBottom: 5,
-    paddingLeft: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ebebeb',
-  },
-  rowSectionHeaderText: {
-    color: 'black',
-    fontWeight: 'bold',
-  },
-})
-
