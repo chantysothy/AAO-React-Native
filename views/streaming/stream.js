@@ -7,19 +7,27 @@
 import React from 'react'
 import {
   StyleSheet,
-  View,
   Text,
-  ScrollView,
   RefreshControl,
-  WebView,
+  View,
   ListView,
 } from 'react-native'
 
 import LoadingView from '../components/loading'
+import {NoticeView} from '../components/notice'
+import {ListRow, ListSeparator, Detail, Title} from '../components/list'
+import {Column} from '../components/layout'
 import EventView from '../calendar/event'
+import { getTrimmedTextWithSpaces, parseHtml } from '../../lib/html'
+import {parseXml} from '../news/parse-feed'
 import * as c from '../components/colors'
 
-let url = 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=-1&q=https://www.stolaf.edu/multimedia/streams/rss/rss.cfm'
+let base = 'https://www.stolaf.edu/multimedia/streams/rss/'
+let streams = 'rss.cfm?'
+let chapelStream = base + '/chapel-rss.cfm'
+let athleticsStream = base + streams + 'category=athletics'
+let academicStream = base + streams + 'category=academic'
+let concertsStream = base + streams + 'category=concerts'
 
 type GoogleCalendarTimeType = {
   dateTime: string,
@@ -29,7 +37,7 @@ type GoogleCalendarEventType = {
   start: GoogleCalendarTimeType,
   end: GoogleCalendarTimeType,
   location: string,
-}
+};
 
 export default class StreamView extends React.Component {
   state = {
@@ -43,11 +51,20 @@ export default class StreamView extends React.Component {
     noStreams: false,
   }
 
+  componentWillMount() {
+    this.getData()
+  }
+
   getData = async () => {
     try {
-      let result = await fetch(url).then(r => r.json())
-      result = result.responseData.feed.entries
-      console.log(result)
+      const responseText = await fetch(concertsStream).then(r => r.text())
+      const feed = await parseXml(responseText)
+      const result = feed.rss.channel[0].item
+
+      if (result.length < 1) {
+        this.setState({noStreams: true})
+      }
+
       this.setState({
         streams: this.state.streams.cloneWithRows(result),
         loaded: true,
@@ -57,16 +74,26 @@ export default class StreamView extends React.Component {
       })
     } catch (error) {
       this.setState({error: error.message})
-      console.error(error)
+      console.warn(error)
     }
   }
 
-  componentWillMount() {
-    this.getData()
-  }
   renderRow = (data: Object) => {
+    let title = getTrimmedTextWithSpaces(parseHtml(data.title))
+    let description = getTrimmedTextWithSpaces(parseHtml(data.description))
     return (
-      <Text>{data.title}</Text>
+      <View>
+        <ListRow
+          onPress={() => this.onPressEvent(data)}
+          arrowPosition='top'
+        >
+          <Column>
+            <Title lines={1}>{title}</Title>
+            <Detail lines={2}>{description}</Detail>
+          </Column>
+        </ListRow>
+        <ListSeparator spacing={{left: 15}} />
+      </View>
 
       // <EventView
       //   style={styles.row}
@@ -78,9 +105,18 @@ export default class StreamView extends React.Component {
       // />
     )
   }
+
   render() {
     if (!this.state.loaded) {
       return <LoadingView />
+    }
+
+    if (this.state.error) {
+      return <NoticeView text={'Error: ' + this.state.error.message} />
+    }
+
+    if (this.state.noStreams) {
+      return <NoticeView text={'No Streams'} />
     }
 
     return (
